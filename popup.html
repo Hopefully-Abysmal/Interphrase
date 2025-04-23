@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Interphrase Settings</title>
+  <style>
+    body { font-family: sans-serif; width: 300px; padding: 10px; }
+    input, button { margin: 5px 0; width: 100%; }
+  </style>
+</head>
+<body>
+  <h3>Add a Translation Pair</h3>
+  <input type="text" id="from" placeholder="Original word" />
+  <input type="text" id="to" placeholder="Translation" />
+  <button id="addPair">Add</button>
+  <ul id="pairList"></ul>
+
+  <script>
+    const fromInput = document.getElementById("from");
+    const toInput = document.getElementById("to");
+    const addBtn = document.getElementById("addPair");
+    const list = document.getElementById("pairList");
+
+    async function loadPairs() {
+      const { translationPairs = {} } = await chrome.storage.local.get("translationPairs");
+      list.innerHTML = '';
+      for (const [from, to] of Object.entries(translationPairs)) {
+        const li = document.createElement("li");
+        li.textContent = `${from} → ${to}`;
+        list.appendChild(li);
+      }
+    }
+
+    addBtn.onclick = async () => {
+      const from = fromInput.value.trim();
+      const to = toInput.value.trim();
+      if (from && to) {
+        const { translationPairs = {} } = await chrome.storage.local.get("translationPairs");
+        translationPairs[from] = to;
+        await chrome.storage.local.set({ translationPairs });
+        fromInput.value = '';
+        toInput.value = '';
+        loadPairs();
+      }
+    };
+
+    loadPairs();
+  </script>
+</body>
+</html>
