@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html>
+html>
 <head>
   <meta charset="UTF-8">
   <title>Interphrase Settings</title>
@@ -15,20 +14,28 @@
   <button id="addPair">Add</button>
   <ul id="pairList"></ul>
 
+  <hr>
+  <label><input type="checkbox" id="autoMode"> Enable LibreTranslate (Full-page)</label><br>
+  <label>Target Language: <input type="text" id="langTarget" value="es"></label>
+
   <script>
     const fromInput = document.getElementById("from");
     const toInput = document.getElementById("to");
     const addBtn = document.getElementById("addPair");
     const list = document.getElementById("pairList");
+    const autoMode = document.getElementById("autoMode");
+    const langTarget = document.getElementById("langTarget");
 
-    async function loadPairs() {
-      const { translationPairs = {} } = await chrome.storage.local.get("translationPairs");
+    async function loadPrefs() {
+      const { translationPairs = {}, autoTranslate = false, targetLang = "es" } = await chrome.storage.local.get(["translationPairs", "autoTranslate", "targetLang"]);
       list.innerHTML = '';
       for (const [from, to] of Object.entries(translationPairs)) {
         const li = document.createElement("li");
         li.textContent = `${from} → ${to}`;
         list.appendChild(li);
       }
+      autoMode.checked = autoTranslate;
+      langTarget.value = targetLang;
     }
 
     addBtn.onclick = async () => {
@@ -40,11 +47,19 @@
         await chrome.storage.local.set({ translationPairs });
         fromInput.value = '';
         toInput.value = '';
-        loadPairs();
+        loadPrefs();
       }
     };
 
-    loadPairs();
+    autoMode.onchange = () => {
+      chrome.storage.local.set({ autoTranslate: autoMode.checked });
+    };
+
+    langTarget.onchange = () => {
+      chrome.storage.local.set({ targetLang: langTarget.value });
+    };
+
+    loadPrefs();
   </script>
 </body>
 </html>
